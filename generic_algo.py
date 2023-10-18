@@ -4,6 +4,8 @@ from random import random
 import random
 import numpy as np
 
+import print_plot
+
 
 class GenericAlgo:
     def __init__(self, total_city, canvas_size, cities, population):
@@ -14,7 +16,7 @@ class GenericAlgo:
 
     def Crossover(self, parent1, parent2):
         start = 0
-        end = round(self.total_city * 0.5)
+        end = round(len(parent1) * 0.5)
 
         child = []
         for i in range(start, end):
@@ -24,10 +26,15 @@ class GenericAlgo:
             if parent2[i] not in child:
                 child.append(parent2[i])
 
+
+        firts_city = child[0]
+        child.append(firts_city)
+
         return child
 
     def Mutate(self, child):
-        i, j = random.sample(range(len(child)), 2)
+        i = random.randint(1, len(self.cities)-2)
+        j = random.randint(1, len(self.cities)-2)
         child[i], child[j] = child[j], child[i]
 
         return child
@@ -41,22 +48,23 @@ class GenericAlgo:
             cityA = cities[cityA_name]
             cityB = cities[cityB_name]
 
-            distance += math.dist(cityA.location, cityB.location)
+            distance += math.sqrt((cityA.location[0] - cityB.location[0]) ** 2 + (cityA.location[1] - cityB.location[1]) ** 2)
         return distance
 
     def GenericAlgorithm(self, population):
 
         # get a new population
         new_population = copy.deepcopy(population)
+        min_distance = float('inf')
 
         # for each individual in population be an A parent
-        for i in range(len(population)):
-            parentA = population[i]
-            parentB = random.choice(population)
+        for i in range(len(self.population)):
+            parentA = self.population[i]
+            parentB = random.choice(self.population[:len(self.population)-2])
 
             # be sure that parrents are different
             while parentA == parentB:
-                parentB = random.choice(population)
+                parentB = random.choice(self.population[:len(self.population)-2])
 
             # create a child
             child = self.Crossover(parentA, parentB)
@@ -69,12 +77,24 @@ class GenericAlgo:
             child_distance = self. GetDistanceOrder(self.cities, child)
             parentA_distance = self. GetDistanceOrder(self.cities, parentA)
 
+
             # if child is better than parentA, replace parentA with child
             if child_distance < parentA_distance:
                 new_population[i] = child
-                print(str(parentA_distance)+"  "+ str(child_distance))
 
         population = new_population
+        self.population = population
+
+        index = 0
+        distances = []
+        for i in range(len(self.population)):
+            d = self.GetDistanceOrder(self.cities, self.population[i])
+            distances.append(d)
+            if d < min_distance:
+                min_distance = d
+
+        print("All distances: "+str(sum(distances)))
+
         return population
 
 
